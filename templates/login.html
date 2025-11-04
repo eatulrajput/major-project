@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login • SuperGPT</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center text-white">
+  <div class="w-full max-w-md px-6">
+    <div class="bg-slate-800/70 backdrop-blur rounded-2xl shadow-xl p-8 border border-slate-700">
+      <div class="text-center mb-6">
+        <div class="text-3xl font-extrabold">SuperGPT</div>
+        <div class="text-slate-300 text-sm mt-1">Sign in to your account</div>
+      </div>
+
+      {% if error %}
+      <div class="mb-4 text-sm text-red-300 bg-red-900/30 border border-red-700 rounded-lg p-3">
+        {{ error }}
+      </div>
+      {% endif %}
+
+      <form method="POST" class="space-y-4">
+        <div>
+          <label class="text-sm text-slate-300">Username or Email</label>
+          <input name="username" required class="w-full mt-1 px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500">
+        </div>
+        <div>
+          <label class="text-sm text-slate-300">Password</label>
+          <input name="password" type="password" required class="w-full mt-1 px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <button class="w-full py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 font-semibold transition">
+          Sign in
+        </button>
+      </form>
+
+      <div class="text-xs text-slate-400 mt-4 text-center">
+        New here?
+       <a href="/register" class="underline hover:text-white">Create an account</a>
+
+      </div>
+    </div>
+  </div>
+</body>
+</html>

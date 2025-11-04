@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Astra • Chat</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+
+  <!-- Top Nav -->
+  <header class="border-b border-slate-800 bg-gray-900/80 backdrop-blur sticky top-0 z-10">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        {% if session.avatar_url %}
+          <img src="{{ session.avatar_url }}" class="w-8 h-8 rounded-full border border-slate-700" referrerpolicy="no-referrer">
+        {% endif %}
+        <span class="text-slate-300">👋 {{ session.display_name or session.username }}</span>
+      </div>
+      <nav class="flex items-center gap-4">
+        <a href="/chat" class="text-indigo-400 font-semibold">Chat</a>
+        <a href="/scraper" class="text-slate-300 hover:text-white">Scraper</a>
+        <a href="/logout" class="text-slate-300 hover:text-white">Logout</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 py-6">
+    <h1 class="text-2xl font-semibold text-center mb-4">Astra — Chat with a Kiitian</h1>
+
+    <!-- Chat Box -->
+    <div id="chat-box" class="flex flex-col space-y-4 overflow-y-auto h-[60vh] bg-gray-800 p-4 rounded-lg shadow-lg">
+      <p class="text-gray-400 text-sm text-center">Upload a PDF or type your message…</p>
+    </div>
+
+    <!-- File Upload -->
+    <div class="flex items-center justify-between mt-4">
+      <input type="file" id="pdf-upload" class="hidden" accept=".pdf">
+      <label for="pdf-upload"
+        class="bg-blue-500 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-blue-600">
+        📂 Upload PDF
+      </label>
+      <p id="upload-status" class="text-gray-400 text-sm"></p>
+    </div>
+
+    <!-- Message Input -->
+    <div class="flex items-center bg-gray-700 p-3 rounded-lg mt-4">
+      <input id="message" type="text" placeholder="Type your message…"
+             class="flex-grow bg-transparent outline-none text-lg px-2">
+      <button id="send-btn" class="bg-green-500 px-4 py-2 rounded-lg ml-2 hover:bg-green-600">➤</button>
+    </div>
+  </main>
+
+  <script>
+    // --- PDF Upload ---
+    async function uploadPDF() {
+      const fileInput = document.getElementById("pdf-upload");
+      const status = document.getElementById("upload-status");
+      if (!fileInput.files || fileInput.files.length === 0) {
+        alert("Please select a PDF file!");
+        return;
+      }
+      const formData = new FormData();
+      formData.append("file", fileInput.files[0]);
+      try {
+        const response = await fetch("/upload", { method: "POST", body: formData });
+        const result = await response.json();
+        status.innerText = response.ok ? "✅ PDF Uploaded Successfully!" : ("❌ " + (result.message || "Upload failed"));
+      } catch {
+        status.innerText = "❌ Upload failed (network).";
+      }
+    }
+    document.getElementById("pdf-upload").addEventListener("change", uploadPDF);
+
+    // --- Chat ---
+    async function sendMessage() {
+      const messageInput = document.getElementById("message");
+      const chatBox = document.getElementById("chat-box");
+      const message = messageInput.value.trim();
+      if (!message) return;
+
+      const userMsg = document.createElement("div");
+      userMsg.className = "bg-blue-600 p-2 rounded-lg self-end max-w-lg";
+      userMsg.textContent = "👤 " + message;
+      chatBox.appendChild(userMsg);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      messageInput.value = "";
+
+      const typing = document.createElement("div");
+      typing.className = "bg-gray-700 p-2 rounded-lg self-start max-w-lg italic opacity-80";
+      typing.textContent = "🤖 typing…";
+      chatBox.appendChild(typing);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      try {
+        const res = await fetch("/api/chat", {  // 👈 note: /api/chat
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message })
+        });
+        const data = await res.json();
+        typing.remove();
+
+        const bot = document.createElement("div");
+        bot.className = "bg-gray-700 p-2 rounded-lg self-start max-w-lg whitespace-pre-wrap";
+        bot.textContent = "🤖 " + (data.reply || "No response.");
+        chatBox.appendChild(bot);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      } catch {
+        typing.remove();
+        const bot = document.createElement("div");
+        bot.className = "bg-gray-700 p-2 rounded-lg self-start max-w-lg";
+        bot.textContent = "🤖 Network error.";
+        chatBox.appendChild(bot);
+      }
+    }
+    document.getElementById("send-btn").addEventListener("click", sendMessage);
+    document.getElementById("message").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); sendMessage(); }
+    });
+  </script>
+</body>
+</html>

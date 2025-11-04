@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Astra • Scraper</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+
+  <!-- Top Nav -->
+  <header class="border-b border-slate-800 bg-gray-900/80 backdrop-blur sticky top-0 z-10">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        {% if session.avatar_url %}
+          <img src="{{ session.avatar_url }}" class="w-8 h-8 rounded-full border border-slate-700" referrerpolicy="no-referrer">
+        {% endif %}
+        <span class="text-slate-300">👋 {{ session.display_name or session.username }}</span>
+      </div>
+      <nav class="flex items-center gap-4">
+        <a href="/chat" class="text-slate-300 hover:text-white">Chat</a>
+        <a href="/scraper" class="text-indigo-400 font-semibold">Scraper</a>
+        <a href="/logout" class="text-slate-300 hover:text-white">Logout</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 py-6">
+    <h1 class="text-2xl font-semibold mb-4">🕷️ KIIT Website Scraper</h1>
+
+    <div class="bg-gray-800 p-4 rounded-lg shadow-lg space-y-3">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div>
+          <label class="text-sm text-gray-300">Start URL</label>
+          <input id="scrape-start-url" type="text"
+                 class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 mt-1"
+                 value="https://kiit.ac.in" />
+        </div>
+        <div>
+          <label class="text-sm text-gray-300">Max Pages</label>
+          <input id="scrape-max-pages" type="number" min="1" max="2000"
+                 class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 mt-1" value="150" />
+        </div>
+        <div>
+          <label class="text-sm text-gray-300">Delay (seconds)</label>
+          <input id="scrape-delay" type="number" step="0.1" min="0"
+                 class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 mt-1" value="0.8" />
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-2">
+        <button id="btn-start" class="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg">Start Async</button>
+        <button id="btn-status" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg">Check Status</button>
+        <button id="btn-reindex" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg">Rebuild TF-IDF Index</button>
+        <button id="btn-stop" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg">Stop</button>
+      </div>
+
+      <pre id="scrape-status"
+        class="bg-gray-900 border border-gray-700 rounded-lg p-3 text-sm overflow-x-auto whitespace-pre-wrap">
+Status will appear here…
+      </pre>
+    </div>
+  </main>
+
+  <script>
+    function setScrapeStatus(obj) {
+      const el = document.getElementById("scrape-status");
+      el.textContent = typeof obj === "string" ? obj : JSON.stringify(obj, null, 2);
+    }
+
+    async function startScrape() {
+      const start_url = document.getElementById("scrape-start-url").value.trim();
+      const max_pages = parseInt(document.getElementById("scrape-max-pages").value, 10);
+      const delay = parseFloat(document.getElementById("scrape-delay").value);
+      setScrapeStatus("⏳ Starting scraper...");
+      try {
+        const res = await fetch("/scrape/start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ start_url, max_pages, delay })
+        });
+        setScrapeStatus(await res.json());
+      } catch (e) {
+        setScrapeStatus({ error: "Failed to start scraper", detail: String(e) });
+      }
+    }
+
+    async function checkScrapeStatus() {
+      try {
+        const res = await fetch("/scrape/status");
+        setScrapeStatus(await res.json());
+      } catch (e) {
+        setScrapeStatus({ error: "Failed to fetch status", detail: String(e) });
+      }
+    }
+
+    async function rebuildIndex() {
+      setScrapeStatus("🔄 Rebuilding TF-IDF index...");
+      try {
+        const res = await fetch("/reindex", { method: "POST" });
+        setScrapeStatus(await res.json());
+      } catch (e) {
+        setScrapeStatus({ error: "Failed to rebuild index", detail: String(e) });
+      }
+    }
+
+    async function stopScrape() {
+      try {
+        const res = await fetch("/scrape/stop", { method: "POST" });
+        setScrapeStatus(await res.json());
+      } catch (e) {
+        setScrapeStatus({ error: "Stop endpoint not available", detail: String(e) });
+      }
+    }
+
+    document.getElementById("btn-start").addEventListener("click", startScrape);
+    document.getElementById("btn-status").addEventListener("click", checkScrapeStatus);
+    document.getElementById("btn-reindex").addEventListener("click", rebuildIndex);
+    document.getElementById("btn-stop").addEventListener("click", stopScrape);
+  </script>
+</body>
+</html>
