@@ -1,0 +1,58 @@
+# =====================
+# Python cache files
+# =====================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# =====================
+# Virtual environments
+# =====================
+venv/
+env/
+.venv/
+ENV/
+
+# =====================
+# Flask
+# =====================
+instance/
+.webassets-cache
+*.log
+
+# =====================
+# Environment variables
+# =====================
+.env
+.env.*
+!env.example
+
+# =====================
+# IDE / Editor files
+# =====================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =====================
+# OS files
+# =====================
+.DS_Store
+Thumbs.db
+
+# =====================
+# Jupyter / ML
+# =====================
+.ipynb_checkpoints/
+*.pkl
+*.joblib
+models/
+data/
+
+# =====================
+# Build / Distribution
+# =====================
+build/
+dist/
+*.egg-info/
