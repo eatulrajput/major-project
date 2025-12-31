@@ -1,9 +1,14 @@
-# db.py
+#db.py
+
+import os
 import sqlite3
-from flask import g 
+from flask import g
 
 # -------------------- DATABASE --------------------
-DATABASE = "chat_history.db"
+DATA_DIR = "data"
+os.makedirs(DATA_DIR, exist_ok=True)  # Create data folder if missing
+
+DATABASE = os.path.join(DATA_DIR, "chat_history.db")
 
 def get_db():
     """Return a request-scoped SQLite connection (used inside Flask routes)."""
@@ -40,7 +45,6 @@ def init_db(app=None):
     Create tables if missing and migrate schemas if needed.
     Call this once at startup (inside app context).
     """
-    # If caller passed app, ensure an app context is active.
     ctx = None
     if app is not None:
         ctx = app.app_context()
@@ -49,7 +53,7 @@ def init_db(app=None):
         db = get_db()
         c = db.cursor()
 
-        # users table (initial create if not exists)
+        # users table
         c.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -58,9 +62,7 @@ def init_db(app=None):
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         """)
-        # --- migration: add email column if it's missing ---
         if not column_exists(c, "users", "email"):
-            # Can’t add UNIQUE constraint via ALTER easily; add as nullable text.
             c.execute("ALTER TABLE users ADD COLUMN email TEXT")
         db.commit()
 
@@ -73,6 +75,7 @@ def init_db(app=None):
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         """)
+
         # scraped pages
         c.execute("""
             CREATE TABLE IF NOT EXISTS scraped_pages (

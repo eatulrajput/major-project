@@ -5,7 +5,7 @@ import sqlite3
 import html
 import threading
 import requests
-import fitz  # PyMuPDF
+import pymupdf
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 from urllib import robotparser
@@ -171,7 +171,7 @@ def upload_pdf():
     if file.filename == "" or not file.filename.lower().endswith(".pdf"):
         return jsonify({"message": "Invalid file type"}), 400
     try:
-        doc = fitz.open(stream=file.read(), filetype="pdf")
+        doc = pymupdf.open(stream=file.read(), filetype="pdf")
         text = "\n".join([page.get_text("text") for page in doc])
         uploaded_pdf_text = text if text.strip() else "No text found in PDF."
         return jsonify({"message": "PDF uploaded successfully"})
@@ -236,7 +236,7 @@ def background_scrape(start_url: str, max_pages: int, delay: float):
 
                 if "pdf" in ctype or url.lower().endswith(".pdf"):
                     try:
-                        doc = fitz.open(stream=resp.content, filetype="pdf")
+                        doc = pymupdf.open(stream=resp.content, filetype="pdf")
                         content = "\n".join([p.get_text("text") for p in doc])
                         title = url.split("/")[-1] or url
                     except Exception:
